@@ -49,6 +49,8 @@ patterns = [
     [r"\,", ","],
     [r"\:", ":"],
     [r"\;", ";"],
+    # For final project (adding the ? T/F)
+    [ r"\?", "?" ],
     [r".", "error"],  # unexpected content
 ]
 
