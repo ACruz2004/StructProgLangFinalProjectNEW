@@ -567,6 +567,17 @@ def evaluate(ast, environment):
         except Exception as e:
             raise Exception(f"Error during import of '{filename_val}': {e}")
 
+    if ast["tag"] == "ternary":
+        cond_val, cond_status = evaluate(ast["cond"], environment)
+        if cond_status == "exit":
+            return cond_val, "exit"
+
+        if is_truthy(cond_val):
+            return evaluate(ast["then"], environment)
+        else:
+            return evaluate(ast["else"], environment)
+
+
     assert False, f"Unknown tag [{ast['tag']}] in AST"
 
 def clean(e):

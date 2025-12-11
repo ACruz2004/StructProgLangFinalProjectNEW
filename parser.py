@@ -912,7 +912,18 @@ def parse_expression(tokens):
     """
     expression = assignment_expression
     """
-    return parse_assignment_expression(tokens)
+    node, tokens = parse_assignment_expression(tokens)
+
+    # Ternary operator: right-associative
+    if tokens[0]["tag"] == "?":
+        tokens = tokens[1:]
+        then_node, tokens = parse_expression(tokens)
+        assert tokens[0]["tag"] == ":", f"Expected ':' at position {tokens[0]['position']}"
+        tokens = tokens[1:]
+        else_node, tokens = parse_expression(tokens)
+        node = {"tag": "ternary", "cond": node, "then": then_node, "else": else_node}
+
+    return node, tokens
 
 
 def test_parse_expression():
@@ -1347,6 +1358,7 @@ def parse_program(tokens):
     return ast, tokens
 
 
+
 def test_parse_program():
     """
     program = [ statement { ";" statement } {";"} ]
@@ -1439,6 +1451,25 @@ def test_parse():
                       """)
     ast = parse(tokens)
 
+def test_ternary():
+    print("testing ternary operator...")
+
+    equals("1 ? 2 : 3", {}, 2)
+    equals("0 ? 2 : 3", {}, 3)
+    equals("(1 < 2) ? 10 : 20", {}, 10)
+    equals("(1 > 2) ? 10 : 20", {}, 20)
+
+    env = {"x": 5}
+    equals("x > 3 ? x : 0", env, 5)
+    equals("x < 3 ? 1 : x+1", env, 6)
+
+    # nested (tests right-associativity)
+    equals("1 ? 2 : 3 ? 4 : 5", {}, 2)
+    equals("0 ? 2 : 0 ? 4 : 6", {}, 6)
+
+    # in print
+    equals("print(1?\"yes\":\"no\")", {}, "yes\n")
+
 
 if __name__ == "__main__":
     # List of all test functions
@@ -1470,6 +1501,7 @@ if __name__ == "__main__":
         test_parse_assert_statement,
         test_parse_statement,
         test_parse_program,
+        test_ternary,
     ]
 
     test_grammar = grammar
